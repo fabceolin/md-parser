@@ -16,10 +16,11 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
-      - name: Run tests
-        run: cargo test --all-features
+      - name: Run tests (with serde and frontmatter)
+        run: cargo test --features serde,frontmatter
       - name: Run tests (no default features)
         run: cargo test --no-default-features
+      # Note: pyo3 feature tests are run in python.yml via maturin
 
   clippy:
     runs-on: ubuntu-latest
@@ -29,8 +30,8 @@ jobs:
         with:
           components: clippy
       - uses: Swatinem/rust-cache@v2
-      - name: Clippy
-        run: cargo clippy --all-features -- -D warnings
+      - name: Clippy (without pyo3 - requires Python linking)
+        run: cargo clippy --features serde,frontmatter -- -D warnings
 
   fmt:
     runs-on: ubuntu-latest
@@ -48,7 +49,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
-      - name: Build docs
-        run: cargo doc --all-features --no-deps
+      - name: Build docs (without pyo3 - requires Python linking)
+        run: cargo doc --features serde,frontmatter --no-deps
         env:
           RUSTDOCFLAGS: -D warnings
