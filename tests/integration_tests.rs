@@ -29,7 +29,9 @@ fn test_parse_simple_document() {
 #[test]
 fn test_parse_checklist_document() {
     let parser = MarkdownParser::new();
-    let doc = parser.parse_file(&fixture_path("with_checklist.md")).unwrap();
+    let doc = parser
+        .parse_file(&fixture_path("with_checklist.md"))
+        .unwrap();
 
     // Should have 6 checklist items
     assert_eq!(doc.checklist_items.len(), 6);
@@ -56,7 +58,9 @@ fn test_parse_checklist_document() {
 #[test]
 fn test_parse_variables_document() {
     let parser = MarkdownParser::new();
-    let doc = parser.parse_file(&fixture_path("with_variables.md")).unwrap();
+    let doc = parser
+        .parse_file(&fixture_path("with_variables.md"))
+        .unwrap();
 
     // Should detect all unique variables
     assert!(doc.variables.contains(&"name".to_string()));
@@ -121,7 +125,10 @@ fn test_parse_bmad_story() {
     let parser = MarkdownParser::new();
     let doc = parser.parse_file(&fixture_path("bmad_story.md")).unwrap();
 
-    assert_eq!(doc.title, Some("Story TEA-TEST-001: Example Story".to_string()));
+    assert_eq!(
+        doc.title,
+        Some("Story TEA-TEST-001: Example Story".to_string())
+    );
 
     // Check checklist items
     assert_eq!(doc.checklist_items.len(), 7);
