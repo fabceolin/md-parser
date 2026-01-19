@@ -8,23 +8,9 @@ permissions:
   contents: write
 
 jobs:
-  build-wheels:
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-            manylinux: auto
-          - os: ubuntu-latest
-            target: aarch64-unknown-linux-gnu
-            manylinux: auto
-          - os: macos-latest
-            target: x86_64-apple-darwin
-          - os: macos-latest
-            target: aarch64-apple-darwin
-          - os: windows-latest
-            target: x86_64-pc-windows-msvc
-    runs-on: ${{ matrix.os }}
+  # Build wheels for x86_64 Linux (manylinux)
+  build-linux-x86_64:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -32,17 +18,88 @@ jobs:
           python-version: "3.11"
       - uses: PyO3/maturin-action@v1
         with:
-          target: ${{ matrix.target }}
-          manylinux: ${{ matrix.manylinux }}
+          target: x86_64-unknown-linux-gnu
+          manylinux: auto
+          command: build
+          args: --release --features pyo3 -o dist -i python3.10 -i python3.11 -i python3.12 -i python3.13
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheels-linux-x86_64
+          path: dist/*.whl
+
+  # Build wheels for aarch64 Linux (manylinux)
+  build-linux-aarch64:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: PyO3/maturin-action@v1
+        with:
+          target: aarch64-unknown-linux-gnu
+          manylinux: auto
+          command: build
+          args: --release --features pyo3 -o dist -i python3.10 -i python3.11 -i python3.12 -i python3.13
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheels-linux-aarch64
+          path: dist/*.whl
+
+  # Build wheels for macOS (x86_64)
+  build-macos-x86_64:
+    runs-on: macos-13  # Intel Mac
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: PyO3/maturin-action@v1
+        with:
+          target: x86_64-apple-darwin
           command: build
           args: --release --features pyo3 -o dist
       - uses: actions/upload-artifact@v4
         with:
-          name: wheels-${{ matrix.target }}
+          name: wheels-macos-x86_64
           path: dist/*.whl
 
+  # Build wheels for macOS (aarch64/ARM)
+  build-macos-aarch64:
+    runs-on: macos-latest  # ARM Mac
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: PyO3/maturin-action@v1
+        with:
+          target: aarch64-apple-darwin
+          command: build
+          args: --release --features pyo3 -o dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheels-macos-aarch64
+          path: dist/*.whl
+
+  # Build wheels for Windows
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: PyO3/maturin-action@v1
+        with:
+          target: x86_64-pc-windows-msvc
+          command: build
+          args: --release --features pyo3 -o dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheels-windows
+          path: dist/*.whl
+
+  # Create GitHub Release with WASM and wheels
   github-release:
-    needs: [build-wheels]
+    needs: [build-linux-x86_64, build-linux-aarch64, build-macos-x86_64, build-macos-aarch64, build-windows]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -50,11 +107,11 @@ jobs:
         with:
           targets: wasm32-unknown-unknown
       - name: Build WASM
-        run: cargo build --release --target wasm32-unknown-unknown --no-default-features --features serde,frontmatter
+        run: cargo build --release --target wasm32-unknown-unknown --no-default-features --features serde,frontmatter,wasm
       - name: Install wasm-pack
         run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
       - name: Build wasm-pack
-        run: wasm-pack build --target web --no-default-features --features serde,frontmatter
+        run: wasm-pack build --target web --no-default-features --features serde,frontmatter,wasm
       - name: Package WASM artifacts
         run: |
           mkdir -p release-artifacts
