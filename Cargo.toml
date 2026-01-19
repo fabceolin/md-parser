@@ -1,0 +1,39 @@
+[package]
+name = "md-parser"
+version = "0.1.0"
+edition = "2021"
+description = "Structured Markdown parsing with sections, variables, and checklists"
+license = "MIT"
+repository = "https://github.com/fabceolin/md-parser"
+keywords = ["markdown", "parser", "sections", "checklist", "frontmatter"]
+categories = ["parsing", "text-processing"]
+rust-version = "1.82"
+
+[lib]
+name = "md_parser"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+pulldown-cmark = { version = "0.12", default-features = false }
+regex = "1"
+thiserror = "2"
+uuid = { version = "1", features = ["v4"] }
+
+# Optional dependencies
+serde = { version = "1", features = ["derive"], optional = true }
+serde_json = { version = "1", optional = true }
+serde_yaml = { version = "0.9", optional = true }
+pyo3 = { version = "0.23", features = ["extension-module"], optional = true }
+
+[dev-dependencies]
+pretty_assertions = "1"
+
+[features]
+default = []
+serde = ["dep:serde", "dep:serde_json"]
+frontmatter = ["dep:serde_yaml", "serde"]
+pyo3 = ["dep:pyo3", "serde"]
+wasm = ["uuid/js"]  # Enable JS random source for WASM builds
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+uuid = { version = "1", features = ["v4", "js"] }
