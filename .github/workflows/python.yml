@@ -8,11 +8,12 @@ on:
     branches: [main]
 
 jobs:
+  # Build wheels for multiple Python versions
   build:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ["3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -29,6 +30,7 @@ jobs:
           name: wheel-${{ matrix.os }}-py${{ matrix.python-version }}
           path: target/wheels/*.whl
 
+  # Build manylinux wheels for Linux (ABI3 compatible)
   linux-manylinux:
     runs-on: ubuntu-latest
     steps:
@@ -44,6 +46,7 @@ jobs:
           name: wheels-linux-manylinux
           path: dist/*.whl
 
+  # Build universal2 macOS wheels (ARM + Intel)
   macos-universal:
     runs-on: macos-latest
     steps:
@@ -58,6 +61,7 @@ jobs:
           name: wheels-macos-universal
           path: dist/*.whl
 
+  # Test that built wheels can be imported
   test-import:
     needs: [build]
     strategy:
