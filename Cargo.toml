@@ -7,7 +7,7 @@ license = "MIT"
 repository = "https://github.com/fabceolin/md-parser"
 keywords = ["markdown", "parser", "sections", "checklist", "frontmatter"]
 categories = ["parsing", "text-processing"]
-rust-version = "1.82"
+rust-version = "1.92"
 
 [lib]
 name = "md_parser"
